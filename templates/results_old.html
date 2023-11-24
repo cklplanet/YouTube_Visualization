@@ -1,0 +1,30 @@
+<!-- templates/results.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+</head>
+<body>
+    <h1>Clustered Groups</h1>
+    <p>Default K value: {{ default_k }}</p>
+    {% for cluster, group in result.groupby('cluster') %}
+        <h2>Cluster {{ cluster }}</h2>
+        <ul>
+            {% for index, row in group.head(15).iterrows() %}
+                <li>{{ row }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <h2>Update K value</h2>
+    <form action="/update_k" method="post">
+        <label for="new_k">Enter new K value:</label>
+        <input type="number" id="new_k" name="new_k" min="1" value="{{ default_k }}" required>
+        <button type="submit">Update K</button>
+    </form>
+</body>
+</html>
+
