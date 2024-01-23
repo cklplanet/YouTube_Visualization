@@ -44,7 +44,7 @@ def get_cached_df():
     return None
 
 def fetch_video_details(video_url):
-    api_key = "AIzaSyCJfGuAo6l8Q8Wb5rZOwbU-oyKmD7bHC0g"
+    api_key = "YOUR_API_KEY"
 
     video_id = video_url.split("?v\u003d")[1]
 
