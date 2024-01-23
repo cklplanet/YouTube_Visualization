@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        button {
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            -webkit-appearance: none;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            margin: 0;
+            transition: .1s;
+            font-weight: 500;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        select {
+            height: 40px;
+            border: 0;
+            outline: none;
+        }
+
+        body {
+            background-color: #fce4c2;
+        }
+
+        .circle {
+            display: flex;
+            min-width: 80px;
+            min-height: 80px;
+            flex-direction: column;
+            width: 50px;
+            height: 50px;
+            font-size: 12px;
+            border-radius: 50%;
+            background-color: #e07c31;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+
+        }
+
+        .container {
+            width: 100%;
+            height: 700px;
+            position: relative;
+        }
+
+        .video-item {
+            display: flex;
+        }
+
+        .video-right {
+            color: #fff;
+            padding-top: 30px;
+        }
+
+        .video-right div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" class="container">
+        <button id="btnLoadCSV">File Upload</button>
+        <select id="optionsList">
+            <option value="" disabled selected style="display: none;">Select</option>
+            <option value="Jujutsu Kaisen">Jujutsu Kaisen</option>
+            <option value="manga">manga</option>
+            <option value="anime series">anime series</option>
+            <option value="Gege Akutami">Gege Akutami</option>
+            <option value="cursed spirits">cursed spirits</option>
+            <option value="Yuji Itadori">Yuji Itadori</option>
+            <option value="Jujutsu Sorcery">Jujutsu Sorcery</option>
+            <option value="cursed energy">cursed energy</option>
+            <option value="Tokyo Metropolitan Jujutsu Technical High School">Tokyo Metropolitan Jujutsu Technical High
+                School</option>
+            <option value="Megumi Fushiguro">Megumi Fushiguro</option>
+            <option value="Nobara Kugisaki">Nobara Kugisaki</option>
+            <option value="Satoru Gojo">Satoru Gojo</option>
+            <option value="life and death">life and death</option>
+            <option value="friendship">friendship</option>
+            <option value="justice">justice</option>
+            <option value="popularity">popularity</option>
+            <option value="critical acclaim">critical acclaim</option>
+            <option value="awards">awards</option>
+            <option value="Sugoi Japan Award">Sugoi Japan Award</option>
+            <option value="Japanese pop culture">Japanese pop culture</option>
+        </select>
+        <button id="btnLoadCSV" onclick="onchangecorle()">Select</button>
+    </div>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.0/papaparse.min.js"></script>
+
+<script>
+    let xcoordinate = ['50', '900', '250', '650', '80', '650', '250', '600', '600', '1100', '1000', '1200']
+    let ycoordinate = ['50', '80', '250', '150', '350', '300', '600', '450', '550', '300', '600', '200']
+    function getRandomXCoordinate(gridSize) {
+        return Math.floor(Math.random() * gridSize) * Math.floor(1725 / gridSize) + 75; // Adjust the range as needed
+    }
+    function getRandomYCoordinate(gridSize) {
+        return Math.floor(Math.random() * gridSize) * Math.floor(750 / gridSize) + 75; // Adjust the range as needed
+    }
+    var selectedColumns = []
+    var dateColumns = []
+    $(document).ready(function () {
+        $('#btnLoadCSV').click(function () {
+            var fileInput = $('<input type="file" accept=".csv">');
+            fileInput.on('change', function (e) {
+                var file = e.target.files[0];
+                Papa.parse(file, {
+                    complete: function (results) {
+                        processData(results.data);
+                    }
+                });
+            });
+            fileInput.click();
+        });
+
+        function processData(data) {
+            // data 
+            selectedColumns = getSelectedColumns(data, getOddNumberColumns(data[0].length));
+            dateColumns = getSelectedColumns(data, getEvenNumberColumns(data[0].length));
+            console.log(selectedColumns)
+            const gridSize = Math.ceil(Math.sqrt(data[0].length));
+            const usedCoordinates = [];
+
+            function getRandomUniqueCoordinate() {
+                let x, y;
+                do {
+                    x = getRandomXCoordinate(gridSize);
+                    y = getRandomYCoordinate(gridSize);
+                } while (usedCoordinates.some(coord => coord.x === x && coord.y === y));
+
+                usedCoordinates.push({ x, y });
+                return { x, y };
+            }
+
+            selectedColumns[0].forEach((ele, index) => {
+                if (ele) {
+                    const { x, y } = getRandomUniqueCoordinate();
+                    createFixedCircle(x, y);
+                }
+            })
+            var size = getColumnCounts(selectedColumns)
+            let crrcles = document.querySelectorAll('.circle')
+            crrcles.forEach((e, index) => {
+                e.style.width = size[index] * 0.1 * 12 + 80 + 'px'
+                e.style.height = size[index] * 0.1 * 12 + 80 + 'px'
+                // let  arr = JSON.parse(selectedColumns[1][index])
+                str = selectedColumns[1][index].replace('[', '').replace(']', '');
+
+                // Remove the extra spaces
+                str = str.replace(/\s/g, '');
+                // Split the string into an array
+                let arr = str.split(',');
+                arr = arr.map(function (item) {
+                    return item.replace(/'/g, '');
+                });
+                e.innerHTML += `<span>${arr[0]}</span><span>${arr[1]}</span><span>${arr[2]}</span>`
+            })
+            clickCircle(selectedColumns)
+        }
+        function getOddNumberColumns(columnCount) {
+            return Array.from({ length: columnCount }, (_, i) => 2 * i + 1);
+        }
+
+        function getEvenNumberColumns(columnCount) {
+            return Array.from({ length: columnCount }, (_, i) => 2 * i);
+        }
+    });
+    function getSelectedColumns(data, columns) {
+        var selectedData = [];
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            var selectedRow = [];
+            columns.forEach(function (columnIndex) {
+                selectedRow.push(row[columnIndex])
+            });
+            selectedData.push(selectedRow);
+        }
+        return selectedData;
+    }
+    function getColumnCounts(data) {
+        var columnCounts = [];
+        if (data.length > 0) {
+            var rowCount = data.length;
+            var columnCount = data[0].length;
+            for (var j = 0; j < columnCount; j++) {
+                var count = 0;
+                for (var i = 0; i < rowCount; i++) {
+                    if (data[i][j] !== null && data[i][j] !== undefined && data[i][j] !== "") {
+                        count++;
+                    }
+                }
+                columnCounts.push(count);
+            }
+        }
+        return columnCounts;
+    }
+    function createFixedCircle(x, y) {
+        var container = document.getElementById("container");
+        var circle = document.createElement("div");
+        circle.className = "circle";
+
+        // Use transform to center the circle
+        circle.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+
+        container.appendChild(circle);
+    }
+    function clickCircle(selectedColumns) {
+        let acircle = document.querySelectorAll('.circle')
+        acircle.forEach((a, index) => {
+            a.addEventListener("click", (async () => {
+                console.log(index, "index")
+                console.log(selectedColumns)
+                let title = $(optionsList).val()
+                let container = document.querySelector('.container')
+                container.innerHTML = '<button onclick="fanhui()">Back</button>'
+                // for (let i = 2; i <= selectedColumns.length; i++) {
+                //     if (selectedColumns[i][index]) {
+                //         await makeAjaxCall(selectedColumns, i, index);
+
+                //     }
+                // }
+                // console.log(selectedColumns[2],$(optionsList).val())
+                if (title) {
+                    console.log(title)
+                    let str = selectedColumns[2][index].replace(/'/g, '"')
+                    let obj = JSON.parse(str)
+                    console.log(obj[title].indices)
+                    for(let i =0 ;i<=obj[title].indices.length;i++){
+                        cancelAllRequestsFlag = false; 
+                      await  makeAjaxCall(selectedColumns[obj[title].indices[i]+1][index],obj[title].indices[i]+1,index)
+                    }
+                    // obj[title].indices.forEach(async (ele) => {
+                    //     console.log(selectedColumns[ele + 1][index], 'aaaaaaaaaaa')
+                    //     await qajax(selectedColumns[ele + 1][index],ele + 1, index)
+                    // })
+                } else {
+                    cancelAllRequestsFlag = false; 
+                    let str = selectedColumns[2][index].replace(/'/g, '"')
+                    let obj = JSON.parse(str)
+                    obj['Jujutsu Kaisen'].indices.forEach(async (ele,ind) => {
+                        // console.log(selectedColumns[ele + 1][index])
+                        await makeAjaxCall(selectedColumns[ele + 1][index], ele + 1, index,ind)
+                    })
+                }
+            })
+            )
+        })
+
+    }
+    function fanhui() {
+        cancelAllRequests();
+        // $(document).ajaxStop(function () {
+        //     $(this).off("ajaxStop");
+        // });
+        let container = document.querySelector('.container')
+        container.innerHTML = `<button id="btnLoadCSV">File Upload</button> <select id="optionsList">
+            <option value="" disabled selected style="display: none;">请选择</option>
+            <option value="Jujutsu Kaisen">Jujutsu Kaisen</option>
+            <option value="manga">manga</option>
+            <option value="anime series">anime series</option>
+            <option value="Gege Akutami">Gege Akutami</option>
+            <option value="cursed spirits">cursed spirits</option>
+            <option value="Yuji Itadori">Yuji Itadori</option>
+            <option value="Jujutsu Sorcery">Jujutsu Sorcery</option>
+            <option value="cursed energy">cursed energy</option>
+            <option value="Tokyo Metropolitan Jujutsu Technical High School">Tokyo Metropolitan Jujutsu Technical High
+                School</option>
+            <option value="Megumi Fushiguro">Megumi Fushiguro</option>
+            <option value="Nobara Kugisaki">Nobara Kugisaki</option>
+            <option value="Satoru Gojo">Satoru Gojo</option>
+            <option value="life and death">life and death</option>
+            <option value="friendship">friendship</option>
+            <option value="justice">justice</option>
+            <option value="popularity">popularity</option>
+            <option value="critical acclaim">critical acclaim</option>
+            <option value="awards">awards</option>
+            <option value="Sugoi Japan Award">Sugoi Japan Award</option>
+            <option value="Japanese pop culture">Japanese pop culture</option>
+        </select>
+        <button id="btnLoadCSV" onclick="onchangecorle()">选择</button>`
+        selectedColumns[0].forEach((ele, index) => {
+            if (ele) {
+                createFixedCircle(xcoordinate[index], ycoordinate[index])
+            }
+        })
+        var size = getColumnCounts(selectedColumns)
+        let crrcles = document.querySelectorAll('.circle')
+        crrcles.forEach((e, index) => {
+            e.style.width = size[index] * 0.1 * 12 + 80 + 'px'
+            e.style.height = size[index] * 0.1 * 12 + 80 + 'px'
+            // let  arr = JSON.parse(selectedColumns[1][index])
+            str = selectedColumns[1][index].replace('[', '').replace(']', '');
+
+            // Remove the extra spaces
+            str = str.replace(/\s/g, '');
+            // Split the string into an array
+            let arr = str.split(',');
+            arr = arr.map(function (item) {
+                return item.replace(/'/g, '');
+            });
+            e.innerHTML += `<span>${arr[0]}</span><span>${arr[1]}</span><span>${arr[2]}</span>`
+        })
+        clickCircle(selectedColumns)
+    }
+    var activeAjaxRequests = []; // Ajax request
+    var xhr;
+    var cancelAllRequestsFlag = false;
+    function cancelAllRequests() {
+        cancelAllRequestsFlag = true;
+        for (var i = 0; i < activeAjaxRequests.length; i++) {
+            if (activeAjaxRequests[i] && activeAjaxRequests[i].readyState !== 4) {
+                activeAjaxRequests[i].abort();
+            }
+        }
+        //
+        activeAjaxRequests = [];
+    }
+    function makeAjaxCall(id, index1, index2,ind) {
+        return new Promise(function (resolve, reject) {
+            if (cancelAllRequestsFlag) {
+                reject('Request has been cancled');
+                return;
+            }
+            // AJAX Reuqest
+            xhr = $.ajax({
+                url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=AIzaSyCJfGuAo6l8Q8Wb5rZOwbU-oyKmD7bHC0g`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Request Success:', response);
+                    container.innerHTML += ` <div class="video-item">
+                                                           <div class="video-img">
+                                                            <a href="https://www.youtube.com/watch?v=${id}"><img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px"></a>
+                                                           </div>
+                                                           <div class="video-right">
+                                                               <div class="video-title">
+                                                                   <span>Timestamp:${dateColumns[index1][index2]}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                   <span>${response.items[0].snippet.title}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                <span>Description: ${response.items[0].snippet.description.length > 200
+                                                                    ? response.items[0].snippet.description.substring(0, 200) + "..."
+                                                                    : response.items[0].snippet.description}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>ViewCount：${response.items[0].statistics.viewCount}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>LikeCount：${response.items[0].statistics.likeCount}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>`
+
+                    resolve(ind + 1);
+                },
+                error: function (xhr, status, error) {
+                    console.log('Request Fail:', error);
+
+                    resolve(index + 1);
+                }
+            });
+            activeAjaxRequests.push(xhr);
+        });
+    }
+
+    function qajax(id, index1, index2) {
+        $.ajax({
+            url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=AIzaSyCJfGuAo6l8Q8Wb5rZOwbU-oyKmD7bHC0g`,
+            method: 'GET', // request
+            dataType: 'json', 
+            success: function (response) {
+                console.log(response)
+                container.innerHTML += ` <div class="video-item">
+                                                           <div class="video-img">
+                                                            <a href="https://www.youtube.com/watch?v=${id}"><img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px"></a>
+                                                           </div>
+                                                           <div class="video-right">
+                                                               <div class="video-title">
+                                                                   <span>Timestamp:${dateColumns[index1][index2]}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                   <span>${response.items[0].snippet.title}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                <span>Description: ${response.items[0].snippet.description.length > 200
+                                                                    ? response.items[0].snippet.description.substring(0, 200) + "..."
+                                                                    : response.items[0].snippet.description}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>ViewCount：${response.items[0].statistics.viewCount}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>LikeCount：${response.items[0].statistics.likeCount}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>`
+
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+            }
+        });
+    }
+    function onchangecorle() {
+        let title = $(optionsList).val()
+        // console.log(selectedColumns[2],$(optionsList).val())
+        selectedColumns[2].forEach((ele, index) => {
+            if (ele) {
+                let str = ele.replace(/'/g, '"')
+                let obj = JSON.parse(str)
+                console.log(obj[title].score, title)
+                changeColor(obj[title].score, index)
+            }
+        })
+    }
+    function changeColor(brightness, index) {
+        var targetColor = "#e07c31"; 
+        var color = blendColors('#000000', targetColor, brightness);
+        let crrcles = document.querySelectorAll('.circle')
+        crrcles[index].style.backgroundColor = color
+        // color function
+        function blendColors(color1, color2, ratio) {
+            var hexColor1 = color1.replace('#', '');
+            var hexColor2 = color2.replace('#', '');
+            var r1 = parseInt(hexColor1.substr(0, 2), 16);
+            var g1 = parseInt(hexColor1.substr(2, 2), 16);
+            var b1 = parseInt(hexColor1.substr(4, 2), 16);
+            var r2 = parseInt(hexColor2.substr(0, 2), 16);
+            var g2 = parseInt(hexColor2.substr(2, 2), 16);
+            var b2 = parseInt(hexColor2.substr(4, 2), 16);
+            var r = Math.round(r1 + (r2 - r1) * ratio);
+            var g = Math.round(g1 + (g2 - g1) * ratio);
+            var b = Math.round(b1 + (b2 - b1) * ratio);
+            return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+        // RGB
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+    }
+</script>
+
+</html>

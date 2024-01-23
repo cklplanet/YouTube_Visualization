@@ -104,10 +104,8 @@
     }
     const usedCoordinates = [];
     const actualCoordinates = [];
-    var selectedColumns = [];
-    var infoColumns = [];
-    var titleColumns = [];
-    var descColumns = [];
+    var selectedColumns = []
+    var dateColumns = []
     $(document).ready(function () {
         console.log("Script is running");
 
@@ -123,12 +121,10 @@
 
         function processData(data) {
             // data 
-            selectedColumns = getSelectedColumns(data, getFirstNumberColumns(data[0].length));
-            infoColumns = getSelectedColumns(data, getSecondNumberColumns(data[0].length));
-            titleColumns = getSelectedColumns(data, getThirdNumberColumns(data[0].length));
-            descColumns = getSelectedColumns(data, getFourthNumberColumns(data[0].length));
+            selectedColumns = getSelectedColumns(data, getOddNumberColumns(data[0].length));
+            dateColumns = getSelectedColumns(data, getEvenNumberColumns(data[0].length));
             console.log(selectedColumns)
-            const gridSize = Math.ceil(Math.sqrt(data[0].length/4));
+            const gridSize = Math.ceil(Math.sqrt(data[0].length));
     
 
             function getRandomUniqueCoordinate() {
@@ -171,21 +167,14 @@
             })
             clickCircle(selectedColumns)
         }
-        function getFirstNumberColumns(columnCount) {
-            return Array.from({ length: columnCount }, (_, i) => 4 * i + 1);
+        function getOddNumberColumns(columnCount) {
+            return Array.from({ length: columnCount }, (_, i) => 2 * i + 1);
         }
 
-        function getSecondNumberColumns(columnCount) {
-            return Array.from({ length: columnCount }, (_, i) => 4 * i + 2);
-        }
-        function getThirdNumberColumns(columnCount) {
-            return Array.from({ length: columnCount }, (_, i) => 4 * i + 3);
-        }
-        function getFourthNumberColumns(columnCount) {
-            return Array.from({ length: columnCount }, (_, i) => 4 * (i + 1));
+        function getEvenNumberColumns(columnCount) {
+            return Array.from({ length: columnCount }, (_, i) => 2 * i);
         }
     });
-
     function getSelectedColumns(data, columns) {
         var selectedData = [];
         for (var i = 0; i < data.length; i++) {
@@ -231,13 +220,12 @@
             a.addEventListener("click", (async () => {
                 console.log(index, "index")
                 console.log(selectedColumns)
-                console.log(infoColumns)
                 let title = $(optionsList).val()
                 let container = document.querySelector('.container')
                 container.innerHTML = '<button onclick="fanhui()">Back</button>'
                 // for (let i = 2; i <= selectedColumns.length; i++) {
                 //     if (selectedColumns[i][index]) {
-                //         await displayVideoInfo(selectedColumns, i, index);
+                //         await makeAjaxCall(selectedColumns, i, index);
 
                 //     }
                 // }
@@ -248,16 +236,17 @@
                     let obj = JSON.parse(str)
                     console.log(obj[title].indices)
                     for(let i =0 ;i<=obj[title].indices.length;i++){
-                        displayVideoInfo(selectedColumns[obj[title].indices[i]+1][index],obj[title].indices[i]+1,index)
+                        cancelAllRequestsFlag = false; 
+                      await  makeAjaxCall(selectedColumns[obj[title].indices[i]+1][index],obj[title].indices[i]+1,index)
                     }
                 } else {
                     // ranking defaults to first keyword
+                    cancelAllRequestsFlag = false; 
                     let str = selectedColumns[2][index].replace(/'/g, '"')
                     let obj = JSON.parse(str)
-                    console.log(obj[Object.keys(obj)[0]].indices)
                     obj[Object.keys(obj)[0]].indices.forEach(async (ele,ind) => {
                         // console.log(selectedColumns[ele + 1][index])
-                        displayVideoInfo(selectedColumns[ele + 1][index], ele + 1, index)
+                        await makeAjaxCall(selectedColumns[ele + 1][index], ele + 1, index,ind)
                     })
                 }
             })
@@ -266,6 +255,7 @@
 
     }
     function fanhui() {
+        cancelAllRequests();
         // $(document).ajaxStop(function () {
         //     $(this).off("ajaxStop");
         // });
@@ -277,6 +267,7 @@
                 ${optionsList.map(option => `<option value="${option}">${option}</option>`).join('\n')}
             </select>
             <button id="btnLoadCSV" onclick="onchangecorle()">Select</button>`
+        console.log(usedCoordinates);
         selectedColumns[0].forEach((ele, index) => {
             if (ele) {
                 // const { x, y } = actualCoordinates[index];
@@ -303,40 +294,67 @@
         })
         clickCircle(selectedColumns)
     }
-
-    function displayVideoInfo(id, index1, index2) {
-        // Parse videoInfo if it's a string
-        //let str = infoColumns[index1][index2].replace(/'/g, '"').replace(/"title"|"description": "([^"]*)"/g, (match, p1) => `"${match}": "${p1.replace(/"/g, '\\"')}"`);
-        let str = infoColumns[index1][index2].replace(/(?<!\\)'(?<!\\)/g, '"');
-        let videoTitle = titleColumns[index1][index2];
-        let videoDesc = descColumns[index1][index2];
-        console.log(str)
-        let videoInfo = JSON.parse(str);
-
-        container.innerHTML += `<div class="video-item">
-                                    <div class="video-img">
-                                        <a href="https://www.youtube.com/watch?v=${id}"><img src="${videoInfo.thumbnail}" alt="" width="240px" height="180px"></a>
-                                    </div>
-                                    <div class="video-right">
-                                        <div class="video-title">
-                                            <span>Timestamp: ${videoInfo.date}</span>
-                                        </div>
-                                        <div class="video-title">
-                                            <span>${videoTitle}</span>
-                                        </div>
-                                        <div class="video-title">
-                                                                <span>Description: ${videoDesc.length > 200
-                                                                    ? videoDesc.substring(0, 200) + "..."
-                                                                    : videoDesc}</span>
+    var activeAjaxRequests = []; // Ajax request
+    var xhr;
+    var cancelAllRequestsFlag = false;
+    function cancelAllRequests() {
+        cancelAllRequestsFlag = true;
+        for (var i = 0; i < activeAjaxRequests.length; i++) {
+            if (activeAjaxRequests[i] && activeAjaxRequests[i].readyState !== 4) {
+                activeAjaxRequests[i].abort();
+            }
+        }
+        //
+        activeAjaxRequests = [];
+    }
+    function makeAjaxCall(id, index1, index2,ind) {
+        return new Promise(function (resolve, reject) {
+            if (cancelAllRequestsFlag) {
+                reject('Request has been cancled');
+                return;
+            }
+            // AJAX Reuqest
+            xhr = $.ajax({
+                url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=AIzaSyCJfGuAo6l8Q8Wb5rZOwbU-oyKmD7bHC0g`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Request Success:', response);
+                    container.innerHTML += ` <div class="video-item">
+                                                           <div class="video-img">
+                                                            <a href="https://www.youtube.com/watch?v=${id}"><img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px"></a>
+                                                           </div>
+                                                           <div class="video-right">
+                                                               <div class="video-title">
+                                                                   <span>Timestamp:${dateColumns[index1][index2]}</span>
                                                                </div>
-                                        <div class="video-like">
-                                            <span>ViewCount: ${videoInfo.views}</span>
-                                        </div>
-                                        <div class="video-like">
-                                            <span>LikeCount: ${videoInfo.likes}</span>
-                                        </div>
-                                    </div>
-                                </div>`;
+                                                               <div class="video-title">
+                                                                   <span>${response.items[0].snippet.title}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                <span>Description: ${response.items[0].snippet.description.length > 200
+                                                                    ? response.items[0].snippet.description.substring(0, 200) + "..."
+                                                                    : response.items[0].snippet.description}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>ViewCount：${response.items[0].statistics.viewCount}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>LikeCount：${response.items[0].statistics.likeCount}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>`
+
+                    resolve(ind + 1);
+                },
+                error: function (xhr, status, error) {
+                    console.log('Request Fail:', error);
+
+                    resolve(index + 1);
+                }
+            });
+            activeAjaxRequests.push(xhr);
+        });
     }
 
     function onchangecorle() {
@@ -378,4 +396,5 @@
         }
     }
 </script>
+
 </html>

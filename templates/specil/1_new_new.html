@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="globals.css" />
+    <link rel="stylesheet" href="styleguide.css" />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-image: url('/Users/cklplanet/Desktop/Everything_NYU/fall 2023/capstone/Project_youtube/misc_playground/interface_json1/templates/specil/pexels-francesco-ungaro-2835436-1.png'); /* Adjust the path to your image */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed; /* Optional: if you want the image to stay fixed during scroll */
+        }
+
+        /* Remove any background-color property that might be affecting the appearance */
+        .container, .box, .label {
+            background-color: transparent; /* Remove specific background color styles */
+        }
+        button {
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            -webkit-appearance: none;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            margin: 0;
+            transition: .1s;
+            font-weight: 500;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        select {
+            height: 40px;
+            border: 0;
+            outline: none;
+        }
+
+
+
+        .circle {
+            display: flex;
+            min-width: 80px;
+            min-height: 80px;
+            flex-direction: column;
+            width: 50px;
+            height: 50px;
+            font-size: 14px;
+            border-radius: 50%;
+            background-color: #e07c31;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            transition: transform 0.5s ease; 
+
+        }
+        .circle:hover {
+            transform: scale(1.2); /* Adjust the scale as needed */
+        }
+
+        .container {
+            width: 100%;
+            height: 700px;
+            position: relative;
+        }
+
+        .video-item {
+            display: flex;
+        }
+
+        .video-right {
+            color: #fff;
+            padding-top: 30px;
+        }
+
+        .video-right div {
+            margin-bottom: 10px;
+        }
+
+
+
+
+        .label {
+            z-index: 1000;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            color: white; /* Example text color */
+            padding: 10px; /* Example padding */
+            text-align: center; /* Example text alignment */
+            display: block !important; /* Override any display:none; */
+            visibility: visible !important; /* Override any visibility:hidden; */
+            overflow: auto; /* Add this to check if there's an overflow */
+            transform: translate(-50%, -50%);
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%; /* Set the height to take full viewport height */
+        }
+        .upload-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: "Poppins-Medium", Helvetica, sans-serif;
+            font-weight: 500;
+            color: rgb(114, 166, 219);
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+            z-index: 1; /* Make sure this is above the z-index of .box and any other overlapping elements */
+            cursor: pointer; /* Change cursor to indicate clickable area */
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .text-wrapper {
+            /* Add your styles here */
+            font-size: 29px; /* Example font size */
+            line-height: 20;
+            display: block; /* Use block to make sure it takes up its own space */
+            font-weight: bold;
+        }
+
+        .button-container {
+            position: absolute;
+            top: 60%; /* Adjust this value to move the button up */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* Any additional styles you want for the button container */
+}
+
+    </style>
+</head>
+
+<body>
+    <div class="label">
+        <p class="text-wrapper">
+            Discover the Internal Link between Your Learning Outcome and Your Youtube Watch History
+        </p>
+        <div class="button-container">
+            <button id="btnLoadCSV" onclick="onchangecorle()">Upload files</button>
+        </div>
+    </div>
+    
+
+
+
+    <div class="image">
+        <img class="pexels-francesco" src="/Users/cklplanet/Desktop/Everything_NYU/fall 2023/capstone/Project_youtube/misc_playground/interface_json1/templates/specil/pexels-francesco-ungaro-2835436-1.png" />
+    </div>
+
+    <div id="container" class="container">
+        <select id="optionsList">
+            <option value="" disabled selected style="display: none;">Select keyword</option>
+            <option value="Jujutsu Kaisen">Jujutsu Kaisen</option>
+            <option value="manga">manga</option>
+            <option value="anime series">anime series</option>
+            <option value="Gege Akutami">Gege Akutami</option>
+            <option value="cursed spirits">cursed spirits</option>
+            <option value="Yuji Itadori">Yuji Itadori</option>
+            <option value="Jujutsu Sorcery">Jujutsu Sorcery</option>
+            <option value="cursed energy">cursed energy</option>
+            <option value="Tokyo Metropolitan Jujutsu Technical High School">Tokyo Metropolitan Jujutsu Technical High
+                School</option>
+            <option value="Megumi Fushiguro">Megumi Fushiguro</option>
+            <option value="Nobara Kugisaki">Nobara Kugisaki</option>
+            <option value="Satoru Gojo">Satoru Gojo</option>
+            <option value="life and death">life and death</option>
+            <option value="friendship">friendship</option>
+            <option value="justice">justice</option>
+            <option value="popularity">popularity</option>
+            <option value="critical acclaim">critical acclaim</option>
+            <option value="awards">awards</option>
+            <option value="Sugoi Japan Award">Sugoi Japan Award</option>
+            <option value="Japanese pop culture">Japanese pop culture</option>
+
+        </select>
+        <button id="btnLoadCSV" onclick="onchangecorle()">Select</button>
+
+    </div>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.0/papaparse.min.js"></script>
+
+<script>
+    // createFixedCircle(80, 350);
+    // createFixedCircle(650, 300);
+    // createFixedCircle(250, 600);
+    // createFixedCircle(850, 450);
+    // createFixedCircle(600, 550);
+    // createFixedCircle(1100, 300);
+    // createFixedCircle(1000, 600);
+    // createFixedCircle(1200, 200);
+    let xcoordinate = ['50', '900', '350', '650', '80', '650', '250', '800', '600', '1100', '1000', '1200']
+    let ycoordinate = ['100', '80', '350', '150', '350', '300', '600', '450', '550', '300', '600', '200']
+    var selectedColumns = []
+    var dateColumns = []
+
+    
+    $(document).ready(function () {
+        $('#btnLoadCSV').click(function () {
+            var fileInput = $('<input type="file" accept=".csv">');
+            fileInput.on('change', function (e) {
+                var file = e.target.files[0];
+                Papa.parse(file, {
+                    complete: function (results) {
+                        processData(results.data);
+                    }
+                });
+            });
+            fileInput.click();
+        });
+
+        function processData(data) {
+            // data 
+            selectedColumns = getSelectedColumns(data, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
+            dateColumns = getSelectedColumns(data, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
+            console.log(selectedColumns)
+            selectedColumns[0].forEach((ele, index) => {
+                if (ele) {
+                    createFixedCircle(xcoordinate[index], ycoordinate[index])
+                }
+            })
+            var size = getColumnCounts(selectedColumns)
+            let crrcles = document.querySelectorAll('.circle')
+            crrcles.forEach((e, index) => {
+                e.style.width = size[index] * 0.1 * 12 + 80 + 'px'
+                e.style.height = size[index] * 0.1 * 12 + 80 + 'px'
+                // let  arr = JSON.parse(selectedColumns[1][index])
+                str = selectedColumns[1][index].replace('[', '').replace(']', '');
+
+                // Remove the extra spaces
+                str = str.replace(/\s/g, '');
+                // Split the string into an array
+                let arr = str.split(',');
+                arr = arr.map(function (item) {
+                    return item.replace(/'/g, '');
+                });
+                e.innerHTML += `<span>${arr[0]}</span><span>${arr[1]}</span><span>${arr[2]}</span>`
+            })
+            clickCircle(selectedColumns)
+        }
+    });
+    function getSelectedColumns(data, columns) {
+        var selectedData = [];
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            var selectedRow = [];
+            columns.forEach(function (columnIndex) {
+                selectedRow.push(row[columnIndex])
+            });
+            selectedData.push(selectedRow);
+        }
+        return selectedData;
+    }
+    function getColumnCounts(data) {
+        var columnCounts = [];
+        if (data.length > 0) {
+            var rowCount = data.length;
+            var columnCount = data[0].length;
+            for (var j = 0; j < columnCount; j++) {
+                var count = 0;
+                for (var i = 0; i < rowCount; i++) {
+                    if (data[i][j] !== null && data[i][j] !== undefined && data[i][j] !== "") {
+                        count++;
+                    }
+                }
+                columnCounts.push(count);
+            }
+        }
+        return columnCounts;
+    }
+    function createFixedCircle(x, y) {
+        var container = document.getElementById("container");
+        var circle = document.createElement("div");
+        circle.className = "circle";
+        circle.style.left = x + "px";
+        circle.style.top = y + "px";
+        container.appendChild(circle);
+    }
+    function clickCircle(selectedColumns) {
+        let acircle = document.querySelectorAll('.circle')
+        acircle.forEach((a, index) => {
+            a.addEventListener("click", (async () => {
+                console.log(index, "index")
+                console.log(selectedColumns)
+                let title = $(optionsList).val()
+                let container = document.querySelector('.container')
+                container.innerHTML = '<button onclick="fanhui()">Back</button>'
+                // for (let i = 2; i <= selectedColumns.length; i++) {
+                //     if (selectedColumns[i][index]) {
+                //         await makeAjaxCall(selectedColumns, i, index);
+
+                //     }
+                // }
+                // console.log(selectedColumns[2],$(optionsList).val())
+                if (title) {
+                    console.log(title)
+                    let str = selectedColumns[2][index].replace(/'/g, '"')
+                    let obj = JSON.parse(str)
+                    console.log(obj[title].indices)
+                    for(let i =0 ;i<=obj[title].indices.length;i++){
+                        cancelAllRequestsFlag = false; 
+                      await  makeAjaxCall(selectedColumns[obj[title].indices[i]+1][index],obj[title].indices[i]+1,index)
+                    }
+                    // obj[title].indices.forEach(async (ele) => {
+                    //     console.log(selectedColumns[ele + 1][index], 'aaaaaaaaaaa')
+                    //     await qajax(selectedColumns[ele + 1][index],ele + 1, index)
+                    // })
+                } else {
+                    cancelAllRequestsFlag = false; 
+                    let str = selectedColumns[2][index].replace(/'/g, '"')
+                    let obj = JSON.parse(str)
+                    obj['Jujutsu Kaisen'].indices.forEach(async (ele,ind) => {
+                        // console.log(selectedColumns[ele + 1][index])
+                        await makeAjaxCall(selectedColumns[ele + 1][index], ele + 1, index,ind)
+                    })
+                }
+            })
+            )
+        })
+
+    }
+    function fanhui() {
+        cancelAllRequests();
+        // $(document).ajaxStop(function () {
+        //     $(this).off("ajaxStop");
+        // });
+        let container = document.querySelector('.container')
+        container.innerHTML = ` <select id="optionsList">
+            <option value="" disabled selected style="display: none;">Select</option>
+            <option value="Jujutsu Kaisen">Jujutsu Kaisen</option>
+            <option value="manga">manga</option>
+            <option value="anime series">anime series</option>
+            <option value="Gege Akutami">Gege Akutami</option>
+            <option value="cursed spirits">cursed spirits</option>
+            <option value="Yuji Itadori">Yuji Itadori</option>
+            <option value="Jujutsu Sorcery">Jujutsu Sorcery</option>
+            <option value="cursed energy">cursed energy</option>
+            <option value="Tokyo Metropolitan Jujutsu Technical High School">Tokyo Metropolitan Jujutsu Technical High
+                School</option>
+            <option value="Megumi Fushiguro">Megumi Fushiguro</option>
+            <option value="Nobara Kugisaki">Nobara Kugisaki</option>
+            <option value="Satoru Gojo">Satoru Gojo</option>
+            <option value="life and death">life and death</option>
+            <option value="friendship">friendship</option>
+            <option value="justice">justice</option>
+            <option value="popularity">popularity</option>
+            <option value="critical acclaim">critical acclaim</option>
+            <option value="awards">awards</option>
+            <option value="Sugoi Japan Award">Sugoi Japan Award</option>
+            <option value="Japanese pop culture">Japanese pop culture</option>
+        </select>
+        <button id="btnLoadCSV" onclick="onchangecorle()">Select</button>`
+        selectedColumns[0].forEach((ele, index) => {
+            if (ele) {
+                createFixedCircle(xcoordinate[index], ycoordinate[index])
+            }
+        })
+        var size = getColumnCounts(selectedColumns)
+        let crrcles = document.querySelectorAll('.circle')
+        crrcles.forEach((e, index) => {
+            e.style.width = size[index] * 0.1 * 12 + 80 + 'px'
+            e.style.height = size[index] * 0.1 * 12 + 80 + 'px'
+            // let  arr = JSON.parse(selectedColumns[1][index])
+            str = selectedColumns[1][index].replace('[', '').replace(']', '');
+
+            // Remove the extra spaces
+            str = str.replace(/\s/g, '');
+            // Split the string into an array
+            let arr = str.split(',');
+            arr = arr.map(function (item) {
+                return item.replace(/'/g, '');
+            });
+            e.innerHTML += `<span>${arr[0]}</span><span>${arr[1]}</span><span>${arr[2]}</span>`
+        })
+        clickCircle(selectedColumns)
+    }
+    var activeAjaxRequests = []; // Ajax request
+    var xhr;
+    var cancelAllRequestsFlag = false;
+    function cancelAllRequests() {
+        cancelAllRequestsFlag = true;
+        for (var i = 0; i < activeAjaxRequests.length; i++) {
+            if (activeAjaxRequests[i] && activeAjaxRequests[i].readyState !== 4) {
+                activeAjaxRequests[i].abort();
+            }
+        }
+        //
+        activeAjaxRequests = [];
+    }
+    function makeAjaxCall(id, index1, index2,ind) {
+        return new Promise(function (resolve, reject) {
+            if (cancelAllRequestsFlag) {
+                reject('Request has been cancled');
+                return;
+            }
+            // AJAX Reuqest
+            xhr = $.ajax({
+                url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=AIzaSyAbcGq1LEMN5DmXQyVkUxI7a6DKn4PFaSk`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Request Success:', response);
+                    container.innerHTML += ` <div class="video-item">
+                                                           <div class="video-img">
+                                                            <a href="https://www.youtube.com/watch?v=${id}"><img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px"></a>
+                                                           </div>
+                                                           <div class="video-right">
+                                                               <div class="video-title">
+                                                                   <span>Timestamp:${dateColumns[index1][index2]}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                   <span>${response.items[0].snippet.title}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                <span>Description: ${response.items[0].snippet.description.length > 200
+                                                                    ? response.items[0].snippet.description.substring(0, 200) + "..."
+                                                                    : response.items[0].snippet.description}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>ViewCount：${response.items[0].statistics.viewCount}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>LikeCount：${response.items[0].statistics.likeCount}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>`
+
+                    resolve(ind + 1);
+                },
+                error: function (xhr, status, error) {
+                    console.log('Request Fail:', error);
+
+                    resolve(index + 1);
+                }
+            });
+            activeAjaxRequests.push(xhr);
+        });
+    }
+
+    function qajax(id, index1, index2) {
+        $.ajax({
+            url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}&key=AIzaSyAbcGq1LEMN5DmXQyVkUxI7a6DKn4PFaSk`,
+            method: 'GET', // request
+            dataType: 'json', 
+            success: function (response) {
+                console.log(response)
+                container.innerHTML += ` <div class="video-item">
+                                                           <div class="video-img">
+                                                            <a href="https://www.youtube.com/watch?v=${id}"><img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px"></a>
+                                                           </div>
+                                                           <div class="video-right">
+                                                               <div class="video-title">
+                                                                   <span>Timestamp:${dateColumns[index1][index2]}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                   <span>${response.items[0].snippet.title}</span>
+                                                               </div>
+                                                               <div class="video-title">
+                                                                <span>Description: ${response.items[0].snippet.description.length > 200
+                                                                    ? response.items[0].snippet.description.substring(0, 200) + "..."
+                                                                    : response.items[0].snippet.description}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>ViewCount：${response.items[0].statistics.viewCount}</span>
+                                                               </div>
+                                                               <div class="video-like">
+                                                                   <span>LikeCount：${response.items[0].statistics.likeCount}</span>
+                                                               </div>
+                                                           </div>
+                                                       </div>`
+
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+            }
+        });
+    }
+    function onchangecorle() {
+        let title = $(optionsList).val()
+        // console.log(selectedColumns[2],$(optionsList).val())
+        selectedColumns[2].forEach((ele, index) => {
+            if (ele) {
+                let str = ele.replace(/'/g, '"')
+                let obj = JSON.parse(str)
+                console.log(obj[title].score, title)
+                changeColor(obj[title].score, index)
+            }
+        })
+    }
+    function changeColor(brightness, index) {
+        var targetColor = "#e07c31"; 
+        var color = blendColors('#000000', targetColor, brightness);
+        let crrcles = document.querySelectorAll('.circle')
+        crrcles[index].style.backgroundColor = color
+        // color function
+        function blendColors(color1, color2, ratio) {
+            var hexColor1 = color1.replace('#', '');
+            var hexColor2 = color2.replace('#', '');
+            var r1 = parseInt(hexColor1.substr(0, 2), 16);
+            var g1 = parseInt(hexColor1.substr(2, 2), 16);
+            var b1 = parseInt(hexColor1.substr(4, 2), 16);
+            var r2 = parseInt(hexColor2.substr(0, 2), 16);
+            var g2 = parseInt(hexColor2.substr(2, 2), 16);
+            var b2 = parseInt(hexColor2.substr(4, 2), 16);
+            var r = Math.round(r1 + (r2 - r1) * ratio);
+            var g = Math.round(g1 + (g2 - g1) * ratio);
+            var b = Math.round(b1 + (b2 - b1) * ratio);
+            return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+        }
+        // RGB
+        function componentToHex(c) {
+            var hex = c.toString(16);
+            return hex.length == 1 ? "0" + hex : hex;
+        }
+    }
+</script>
+
+</html>

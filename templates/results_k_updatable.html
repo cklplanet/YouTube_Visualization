@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #fce4c2;
+        }
+
+        .circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #e07c31;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            height: 700px;
+            position: relative;
+        }
+
+        .video-item {
+            display: flex;
+        }
+
+        .video-right {
+            color: #fff;
+            padding-top: 30px;
+        }
+
+        .video-right div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container" class="container">
+    </div>
+    <form action="/update_k" method="post" style="position: fixed; bottom: 0; width: 100%; text-align: center; background-color: #f1f1f1; padding: 15px;">
+        <label for="new_k">Enter new K value:</label>
+        <input type="number" id="new_k" name="new_k" min="1" value="{{ default_k }}" required>
+        <button type="submit">Update K</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.0/papaparse.min.js"></script>
+
+    <script>
+        {% block script %}
+            $(document).ready(function () {
+                console.log("Script is running");
+
+                    // Simulate receiving data from Flask app
+                var csvData = {{ result | tojson | safe }};
+                
+                // Parse the CSV data using PapaParse
+                Papa.parse(csvData, {
+                    complete: function (results) {
+                        processData(results.data);
+                    }
+                });
+
+                function processData(data) {
+                    // data处理
+                    console.log(data);
+                    let selectedColumns = getSelectedColumns(data, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
+                    console.log(selectedColumns)
+                    var size = getColumnCounts(selectedColumns)
+                    let crrcles = document.querySelectorAll('.circle')
+                    crrcles.forEach((e, index) => {
+                        e.style.width = size[index] * 0.1 * 30 + 'px'
+                        e.style.height = size[index] * 0.1 * 30 + 'px'
+                        e.innerHTML += `<span>${selectedColumns[1][index]}</span>`
+                    })
+                    clickCircle(selectedColumns)
+                }
+            });
+            function getSelectedColumns(data, columns) {
+                var selectedData = [];
+                for (var i = 0; i < data.length; i++) {
+                    var row = data[i];
+                    var selectedRow = [];
+                    columns.forEach(function (columnIndex) {
+                        selectedRow.push(row[columnIndex])
+                    });
+                    selectedData.push(selectedRow);
+                }
+                return selectedData;
+            }
+            function getColumnCounts(data) {
+                var columnCounts = [];
+                if (data.length > 0) {
+                    var rowCount = data.length;
+                    var columnCount = data[0].length;
+                    for (var j = 0; j < columnCount; j++) {
+                        var count = 0;
+                        for (var i = 0; i < rowCount; i++) {
+                            if (data[i][j] !== null && data[i][j] !== undefined && data[i][j] !== "") {
+                                count++;
+                            }
+                        }
+                        columnCounts.push(count);
+                    }
+                }
+                return columnCounts;
+            }
+            function createFixedCircle(x, y) {
+                var container = document.getElementById("container");
+                var circle = document.createElement("div");
+                circle.className = "circle";
+                circle.style.left = x + "px";
+                circle.style.top = y + "px";
+                container.appendChild(circle);
+            }
+            function clickCircle(selectedColumns) {
+                let container = document.querySelector('.container');
+                // Add a return button at the top-left corner
+                let returnButton = document.createElement('button');
+                returnButton.innerText = 'Return';
+                returnButton.style.display = 'none'; // Initially hide the button
+                returnButton.style.position = 'fixed';
+                returnButton.style.bottom = '10px';  // Adjust the top and left values as needed
+                returnButton.style.left = '10px';
+                returnButton.style.zIndex = '999';
+                document.body.appendChild(returnButton);
+                // Store the original container content
+                let acircle = document.querySelectorAll('.circle');
+                let originalContent = container.innerHTML;
+                let returnButtonClicked = false; 
+                
+                function attachClickListeners(){
+                    returnButtonClicked = false; 
+                    acircle = document.querySelectorAll('.circle');
+                    acircle.forEach((a, index) => {
+                        a.addEventListener("click", (async () => {
+                            console.log(index, "index");
+                            returnButton.style.display = 'block';
+                            container.innerHTML = ''
+                            for (let i = 2; i <= selectedColumns.length; i++) {
+                                if (selectedColumns[i] && selectedColumns[i][index] && !returnButtonClicked) {
+                                    await makeAjaxCall(selectedColumns,i,index);
+                                    if (returnButtonClicked){
+                                        container.innerHTML = ''
+                                        break;
+                                    }
+                                }else {
+                                    // Break the loop if the return button is clicked or if selectedColumns[i] is undefined
+                                    break;
+                                }
+                            }
+                        })
+                        )
+                    })
+                }
+
+                attachClickListeners();
+
+                returnButton.addEventListener('click', function () {
+                    // Hide the return button
+                    returnButton.style.display = 'none';
+                    returnButtonClicked = true;
+                    container.innerHTML = ''
+                    // Restore the original container content
+                    setTimeout(() => {
+                        container.innerHTML = originalContent;
+                        attachClickListeners();
+                    }, 220)
+                });
+
+            }
+            function makeAjaxCall(selectedColumns,i,index) {
+                return new Promise(function (resolve, reject) {
+                    // ajax request
+                    $.ajax({
+                        url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${selectedColumns[i][index]}&key=AIzaSyBt28jsOVrTvcYaKtuwn7pCw05n8AlCqLw`,
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            console.log('success:', response);
+                            container.innerHTML += ` <div class="video-item">
+                                                                <div class="video-img">
+                                                                    <img src="${response.items[0].snippet.thumbnails.high.url}" alt="" width="240px" height="180px">
+                                                                </div>
+                                                                <div class="video-right">
+                                                                    <div class="video-title">
+                                                                        <span>${response.items[0].snippet.title}</span>
+                                                                    </div>
+                                                                    <div class="video-like">
+                                                                        <span>viewcount：${response.items[0].statistics.viewCount}</span>
+                                                                    </div>
+                                                                    <div class="video-like">
+                                                                        <span>likes：${response.items[0].statistics.likeCount}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>`
+
+                            //     },
+                            resolve(index + 1);
+                        },
+                        error: function (xhr, status, error) {
+                            // exception
+                            console.log('fail:', error);
+                            resolve(index + 1);
+                        }
+                    });
+                });
+            }
+            createFixedCircle(50, 50);
+            createFixedCircle(650, 80);
+            createFixedCircle(250, 250);
+            createFixedCircle(850, 150);
+            createFixedCircle(80, 350);
+            createFixedCircle(650, 300);
+            createFixedCircle(250, 600);
+            createFixedCircle(850, 450);
+            createFixedCircle(600, 550);
+            createFixedCircle(1100, 300);
+            createFixedCircle(1000, 600);
+            createFixedCircle(1200, 200);
+            function qajax(id) {
+                $.ajax({
+                    url: `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${id}=AIzaSyBt28jsOVrTvcYaKtuwn7pCw05n8AlCqLw`,
+                    method: 'GET', // request
+                    dataType: 'json', // response
+                    success: function (response) {
+                        console.log(response);
+                    },
+                    error: function (xhr, status, error) {
+                        // exception
+                        console.log(error);
+                    }
+                });
+            }
+        {% endblock %}
+
+    </script>
+
+
+
+</html>
