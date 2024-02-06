@@ -15,7 +15,6 @@ from nltk.corpus import stopwords
 import re
 import string
 from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from umap import UMAP
@@ -106,15 +105,20 @@ def generate_dataset(video_data):
 """
 
 def process_video(video):
+    sbert = SentenceTransformer('all-MiniLM-L6-v2')
     if 'titleUrl' in video:
         video_details = fetch_video_details(video["titleUrl"])
         if video_details['title'] == "Video not found":
             return None
+        caption = extract_captions(video_details['ID'])
+        document = str(video_details['title']) + str(video_details['description']) + str(caption)
+        embedding = sbert.encode([document], convert_to_tensor=False)
         return {
             'ID': video_details['ID'],
             'Titles': video_details['title'],
             'descriptions': video_details['description'],
-            'captions': extract_captions(video_details['ID']),
+            'captions': caption,
+            'embeddings': embedding,
             'info': {'date':video['time'],"thumbnail":video_details['thumbnail'], "views":video_details['views'], "likes":video_details['likes']}
         }
     return None
@@ -140,39 +144,51 @@ def perform_clustering(data, k, doc_keywords):
 
     hdbscan_model = HDBSCAN(min_cluster_size=12, min_samples=12, metric='euclidean', cluster_selection_method='eom', prediction_data=True)
     n_components = 3
-    umap_model = UMAP(n_components)
-    representation_model = KeyBERTInspired()
+    umap_model = UMAP(n_components, random_state=42)
 
-    topic_model = BERTopic(hdbscan_model=kmeans, umap_model=umap_model, representation_model=representation_model)
-    topics, probs = topic_model.fit_transform(data['documents'])
-
-    vectorizer = TfidfVectorizer(sublinear_tf=True,  norm='l2', encoding='latin-1', ngram_range=(1, 3))
+    #BERTtopic-based implementation
     
+    #topic_model = BERTopic(hdbscan_model=kmeans, umap_model=umap_model, representation_model=representation_model)
+    #topics, probs = topic_model.fit_transform(data['documents'])
+
+    clusterer = kmeans
+    umap_embeddings = umap_model.fit_transform(data['embeddings'])
+    clusterer.fit(umap_embeddings)
+
+    vectorizer = TfidfVectorizer(sublinear_tf=True,  norm='l2', encoding='latin-1', ngram_range=(1, 2))
 
     candidates0 = doc_keywords
 
-    groups = data.groupby(topic_model.topics_)
+    #groups = data.groupby(topic_model.topics_)
+    groups = data.groupby(clusterer.labels_)
     total = pd.DataFrame()
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    keyword_tfidf_embeddings = model.encode(candidates0, convert_to_tensor=False)
+
 
     for i, group in groups:
         if i != -1:
-            name = topic_model.get_topic_info()['Name'][i]
-            keywords = topic_model.get_topic_info()['Representation'][i]
-            group_members = group[['ID', 'info', 'Titles', 'descriptions']]
+            #keywords = topic_model.get_topic_info()['Representation'][i]
+            keywords = extract_keywords_tfidf_multiple(group['embeddings'], top_n=10)
+            group_members = group[['ID', 'info', 'Titles', 'descriptions', 'embeddings']]
             column_mapping = {'ID': f'ID{i}', 'info': f'info{i}', 'Titles': f'title{i}', 'descriptions': f'description{i}'}
             keyword_data = {}
 
-            combined_list = pd.concat([group['documents'], pd.Series(candidates0)], ignore_index=True).tolist()
+            #combined_list = pd.concat([group['documents'], pd.Series(candidates0)], ignore_index=True).tolist()
             # Fit and transform the documents
             #if tfidf_key:
-            tfidf_matrix = vectorizer.fit_transform(combined_list)
-            embedding_combined = tfidf_matrix.toarray()
+            #tfidf_matrix = vectorizer.fit_transform(combined_list)
+            #embedding_combined = tfidf_matrix.toarray()
             #else:
                 #embedding_combined = sbert_model_key.encode(combined_list, convert_to_tensor=True)
                 #embedding_combined = embedding_combined.to('cpu').detach().numpy()
 
-            doc_tfidf_embeddings = embedding_combined[:len(group['documents'])]
-            keyword_tfidf_embeddings = embedding_combined[len(group['documents']):]
+
+            #doc_tfidf_embeddings = embedding_combined[:len(group['documents'])]
+            #keyword_tfidf_embeddings = embedding_combined[len(group['documents']):]
+
+            #for cases where the embeddings have already been obtained beforehand
+            doc_tfidf_embeddings = group['embeddings'].tolist()
 
             doc_distances10_sub = cosine_similarity(doc_tfidf_embeddings, keyword_tfidf_embeddings)
 
@@ -223,7 +239,6 @@ def upload():
     pdf_file = request.files['pdf_file']
     json_file = request.files['json_file']
 
-
     if pdf_file and json_file:
         # Read the PDF file
         # Step 1: Extract text from PDF
@@ -238,7 +253,7 @@ def upload():
         # Read the JSON file
         video_data = json.load(json_file)
         df = generate_dataset(video_data, limit)
-        df['documents'] = df.apply(lambda row: str(row['Titles']) +' '+ str(row['descriptions']) + str(row['captions']), axis=1)
+        #df['documents'] = df.apply(lambda row: str(row['Titles']) +' '+ str(row['descriptions']) + str(row['captions']), axis=1)
         
         app.df = df
         app.lst = top_keywords_tfidf
