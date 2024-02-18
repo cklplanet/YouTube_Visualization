@@ -40,6 +40,7 @@ def extract_keywords_tfidf_multiple(documents, top_n=10):
     title_ranking = np.sum(features_token, axis=0) / np.sum(features_token > 0, axis=0)
     indices = np.argsort(title_ranking)
     feature_names = np.array(tfidf.get_feature_names_out())[indices]
+    feature_names = feature_names.tolist()
     
     return feature_names[-top_n:]
 

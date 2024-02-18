@@ -43,7 +43,7 @@ def get_cached_df():
     return None
 
 def fetch_video_details(video_url):
-    api_key = "YOUR_API_KEY"
+    api_key = "AIzaSyAbcGq1LEMN5DmXQyVkUxI7a6DKn4PFaSk"
 
     video_id = video_url.split("?v\u003d")[1]
 
@@ -113,11 +113,13 @@ def process_video(video):
         caption = extract_captions(video_details['ID'])
         document = str(video_details['title']) + str(video_details['description']) + str(caption)
         embedding = sbert.encode([document], convert_to_tensor=False)
+        embedding = embedding[0]
         return {
             'ID': video_details['ID'],
             'Titles': video_details['title'],
             'descriptions': video_details['description'],
             'captions': caption,
+            'documents': document,
             'embeddings': embedding,
             'info': {'date':video['time'],"thumbnail":video_details['thumbnail'], "views":video_details['views'], "likes":video_details['likes']}
         }
@@ -152,7 +154,8 @@ def perform_clustering(data, k, doc_keywords):
     #topics, probs = topic_model.fit_transform(data['documents'])
 
     clusterer = kmeans
-    umap_embeddings = umap_model.fit_transform(data['embeddings'])
+
+    umap_embeddings = umap_model.fit_transform(data['embeddings'].tolist())
     clusterer.fit(umap_embeddings)
 
     vectorizer = TfidfVectorizer(sublinear_tf=True,  norm='l2', encoding='latin-1', ngram_range=(1, 2))
@@ -169,8 +172,8 @@ def perform_clustering(data, k, doc_keywords):
     for i, group in groups:
         if i != -1:
             #keywords = topic_model.get_topic_info()['Representation'][i]
-            keywords = extract_keywords_tfidf_multiple(group['embeddings'], top_n=10)
-            group_members = group[['ID', 'info', 'Titles', 'descriptions', 'embeddings']]
+            keywords = extract_keywords_tfidf_multiple(group['documents'], top_n=10)
+            group_members = group[['ID', 'info', 'Titles', 'descriptions']]
             column_mapping = {'ID': f'ID{i}', 'info': f'info{i}', 'Titles': f'title{i}', 'descriptions': f'description{i}'}
             keyword_data = {}
 
@@ -261,7 +264,7 @@ def upload():
 
         # Perform clustering with default K value
         df = perform_clustering(df, DEFAULT_K, top_keywords_tfidf)
-        df.to_csv("actual_file_created_by_app_efficient.csv")
+        
         df_csv = df.to_csv()
 
         # Display the clustered groups on the results page
